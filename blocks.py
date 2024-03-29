@@ -54,9 +54,31 @@ class Block:
     def move(self, deltax, deltay):
         for i in range(len(self.locations)):
             self.locations[i] = (self.locations[i][0]+deltax, self.locations[i][1]+deltay)
- 
+    
+    def rotate(self, direction):
+        # Rotate counterclockwise: first transpose, then reverse columns
+        # Rotate clockwise: first transpose, then reverse rows
+        print("Locations before rotation:", self.locations)
+        center_y = (max(self.locations, key=lambda x: x[1])[1]+min(self.locations, key=lambda x: x[1])[1])/2
+        center_x = (max(self.locations, key=lambda x: x[0])[0]+min(self.locations, key=lambda x: x[0])[0])/2
+        
+        for i in range(len(self.locations)):
+            self.locations[i] = (self.locations[i][0]-center_x, self.locations[i][1]-center_y)
+        for i in range(len(self.locations)):
+            self.locations[i] = (self.locations[i][1], self.locations[i][0])
+        for i in range(len(self.locations)):
+            self.locations[i] = (self.locations[i][0]+center_x, self.locations[i][1]+center_y)
+        if direction == 1:
+            for i in range(len(self.locations)):
+                self.locations[i] = (self.locations[i][0], 2*center_y - self.locations[i][1] )
+        elif direction == -1:
+            for i in range(len(self.locations)):
+                self.locations[i] = (2*center_x - self.locations[i][0] , self.locations[i][1])
+        else:
+            raise Exception("Unknown rotation")
+        print("Locations after rotation:", self.locations)
+        
     def check_collision(self, settings):
-        print(self.locations)
         for (x,y) in self.locations:
             if x<0 or y<0 or x>=settings.grid_size[0] or y>=settings.grid_size[1]:
                 return self.COLLISION_WALL
