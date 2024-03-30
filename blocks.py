@@ -1,7 +1,8 @@
 import pygame
+import engine
 import math
 
-class Block:
+class Block():
     """A block
             - self.color: The (r,g,b) color of the block
             - self.locations: List of squares composing the block, recorded as [x_position, y_position, is_visible].
@@ -20,7 +21,9 @@ class Block:
     graphics   = []
     square_size = []
     
-    def __init__(self, blocktype, startx, square_size, color=0):   
+    def __init__(self, engine, blocktype, startx, square_size, color=0):   
+        
+        self.engine = engine
         
         self.square_size = square_size
         
@@ -85,13 +88,18 @@ class Block:
                 self.locations[i] = [2*center_x - self.locations[i][0], self.locations[i][1], self.locations[i][2]]
         else:
             raise Exception("Unknown rotation")
+        for i in range(len(self.locations)):
+            self.locations[i][0] = int(self.locations[i][0])
+            self.locations[i][1] = int(self.locations[i][1])
         
-    def check_collision(self, settings):
+    def check_collision(self):
         for x,y,is_visible in self.locations:
             if is_visible == False:
                 continue
-            if x<0 or y<0 or x>=settings.grid_size[0] or y>=settings.grid_size[1]:
+            if x<0 or x>=self.engine.settings.grid_size[0]:
                 return self.COLLISION_WALL
+            if y>=self.engine.floor[x]:
+                return self.COLLISION_BLOCK
         return self.COLLISION_NONE
     
     def update_graphics(self):
@@ -100,6 +108,10 @@ class Block:
             if is_visible:
                 self.graphics.append(pygame.Rect(x*self.square_size, y*self.square_size, self.square_size, self.square_size))
     
-    def draw(self, surface):
+    def draw(self):
         for rect in self.graphics:
-            surface.fill(self.color, rect=rect)
+            self.engine.screen.fill(self.color, rect=rect)
+    
+    def clear(self):
+        for rect in self.graphics:
+            self.engine.screen.fill(self.engine.settings.background, rect=rect)
