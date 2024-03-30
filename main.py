@@ -17,8 +17,8 @@ def main():
      
     running = True
     
-    
-    falling_block = blocks.Block(6, 0, settings.block_size)
+    current_block = 0
+    falling_block = blocks.Block(current_block, 0, settings.block_size)
     
     
     while running:    
@@ -43,13 +43,16 @@ def main():
                     if falling_block.check_collision(settings)<0:
                         falling_block.move(0, -1)
                 elif event.key == pygame.K_q:
-                    falling_block.rotate(1)
-                    if falling_block.check_collision(settings)<0:
-                        falling_block.rotate(-1)
-                elif event.key == pygame.K_e:
                     falling_block.rotate(-1)
                     if falling_block.check_collision(settings)<0:
                         falling_block.rotate(1)
+                elif event.key == pygame.K_e:
+                    falling_block.rotate(1)
+                    if falling_block.check_collision(settings)<0:
+                        falling_block.rotate(-1)
+                elif event.key == pygame.K_t:
+                    current_block += 1
+                    falling_block = blocks.Block(current_block, 0, settings.block_size)
         falling_block.update_graphics()
         
      
