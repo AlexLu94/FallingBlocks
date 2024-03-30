@@ -98,7 +98,8 @@ class Block():
                 continue
             if x<0 or x>=self.engine.settings.grid_size[0]:
                 return self.COLLISION_WALL
-            if y>=self.engine.floor[x]:
+            print("Check", x, y)
+            if y == self.engine.settings.grid_size[1] or self.engine.floor[x][y]==1:
                 return self.COLLISION_BLOCK
         return self.COLLISION_NONE
     

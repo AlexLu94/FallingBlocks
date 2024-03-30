@@ -15,9 +15,9 @@ class Engine():
         pygame.display.set_caption("Falling Blocks")
         self.settings = Settings()
         self.screen = pygame.display.set_mode(self.settings.canvas_size)
-        self.floor = [self.settings.grid_size[1] for _ in range(self.settings.grid_size[0])]
+        self.floor = [[0 for _ in range(self.settings.grid_size[1])] for _ in range(self.settings.grid_size[0])]
         self.falling_block = blocks.Block(self, random.randrange(6), 0, self.settings.block_size)
-
+        print(self.floor)
     def advance(self, user_input):
         
         old_position = copy.copy(self.falling_block)
@@ -69,7 +69,7 @@ class Engine():
         for x, y, is_visible in self.falling_block.locations:
             if is_visible == 0:
                 continue
-            self.floor[x]=min(self.floor[x], y)
+            self.floor[x][y]=1
         print(self.floor)
 
 class Settings():
