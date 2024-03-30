@@ -21,7 +21,7 @@ class Block():
     graphics   = []
     square_size = []
     
-    def __init__(self, engine, blocktype, startx, square_size, color=0):   
+    def __init__(self, engine, blocktype, startx, square_size, color=-1):   
         
         self.engine = engine
         
@@ -30,37 +30,37 @@ class Block():
         if blocktype==0:
             # 'L' block
             self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx+1, 2, True], [startx-1, 2, False]]
-            self.color     = (220, 80, 15)
+            self.color     = 0
         elif blocktype==1:
             # reversed 'L' block
             self.locations = [[startx+1, 0, True], [startx+1, 1, True], [startx+1, 2, True], [startx, 2, True], [startx-1, 2, False]]
-            self.color     = (15, 80, 220)
+            self.color     = 1
         elif blocktype==2:
             # square block
             self.locations = [[startx, 0, True], [startx, 1, True], [startx+1, 0, True], [startx+1, 1, True]]
-            self.color     = (220, 220, 80)
+            self.color     = 2
         elif blocktype==3:
             # I block
             self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx, 3, True], [startx, 4, False]]
-            self.color     = (80, 220, 220)
+            self.color     = 3
         elif blocktype==4:
             # S block
             self.locations = [[startx, 0, True], [startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+2, 2, True]]
-            self.color     = (220, 80, 220)
+            self.color     = 4
         elif blocktype==5:
             # Z block
             self.locations = [[startx, 2, True], [startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+2, 0, True]]
-            self.color     = (220, 15, 80)
+            self.color     = 5
         elif blocktype==6:
             # reversed T block
             self.locations = [[startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+1, 0, True],[startx+1, 2, False]]
-            self.color     = (80, 220, 15)
+            self.color     = 5
         else:
             raise Exception("Unknown blocktype")
         
         self.update_graphics()
         
-        if color!=0:
+        if color!=-1:
             self.color = color
     
     def move(self, deltax, deltay):
@@ -98,8 +98,7 @@ class Block():
                 continue
             if x<0 or x>=self.engine.settings.grid_size[0]:
                 return self.COLLISION_WALL
-            print("Check", x, y)
-            if y == self.engine.settings.grid_size[1] or self.engine.floor[x][y]==1:
+            if y == self.engine.settings.grid_size[1] or self.engine.floor[y][x]>-1:
                 return self.COLLISION_BLOCK
         return self.COLLISION_NONE
     
@@ -111,7 +110,7 @@ class Block():
     
     def draw(self):
         for rect in self.graphics:
-            self.engine.screen.fill(self.color, rect=rect)
+            self.engine.screen.fill(self.engine.colors.COLORS[self.color], rect=rect)
     
     def clear(self):
         for rect in self.graphics:
