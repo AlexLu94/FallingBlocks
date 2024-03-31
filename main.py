@@ -15,7 +15,7 @@ def main():
      
     running = True
     user_input = 0
-    engine.screen.fill(engine.settings.background)
+    
     
     new_step = pygame.time.get_ticks()+engine.settings.time_step
     

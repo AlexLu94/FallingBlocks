@@ -10,15 +10,16 @@ import engine
 import math
 
 class Block():
-    """A block
+    """
+    Class defining a falling block
             - self.color: The (r,g,b) color of the block
             - self.locations: List of squares composing the block, recorded as [x_position, y_position, is_visible].
               A square with is_visible == false does not appear on screen, does not collide with anything, and is used
-              only to facilitate rotations and make them feel more natural.
+              only to facilitate the rotation algorithm.
             - self.graphics: List of pygame.rect objects composing the block.
-            - self.square_size: The side length of a square section composing the block.
     """
     
+    # 
     COLLISION_NONE  = 0
     COLLISION_WALL  = -1
     COLLISION_BLOCK = -2
@@ -31,8 +32,6 @@ class Block():
     def __init__(self, engine, blocktype, startx, square_size, color=-1):   
         
         self.engine = engine
-        
-        self.square_size = square_size
         
         if blocktype==0:
             # 'L' block
@@ -52,16 +51,16 @@ class Block():
             self.color     = 3
         elif blocktype==4:
             # S block
-            self.locations = [[startx, 0, True], [startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+2, 2, True]]
+            self.locations = [[startx, 0, True], [startx+1, 0, True], [startx+1, 1, True], [startx+2, 1, True]]
             self.color     = 4
         elif blocktype==5:
             # Z block
-            self.locations = [[startx, 2, True], [startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+2, 0, True]]
+            self.locations = [[startx, 0, True], [startx+1, 0, True], [startx, 1, True], [startx-1, 1, True]]
             self.color     = 5
         elif blocktype==6:
             # reversed T block
             self.locations = [[startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+1, 0, True],[startx+1, 2, False]]
-            self.color     = 5
+            self.color     = 6
         else:
             raise Exception("Unknown blocktype")
         
@@ -105,7 +104,7 @@ class Block():
                 continue
             if x<0 or x>=self.engine.settings.grid_size[0]:
                 return self.COLLISION_WALL
-            if y == self.engine.settings.grid_size[1] or self.engine.floor[y][x]>-1:
+            if y == self.engine.settings.grid_size[1] or self.engine.old_blocks[y][x]>-1:
                 return self.COLLISION_BLOCK
         return self.COLLISION_NONE
     
@@ -113,7 +112,7 @@ class Block():
         self.graphics = []
         for x,y,is_visible in self.locations:
             if is_visible:
-                self.graphics.append(pygame.Rect(x*self.square_size, y*self.square_size, self.square_size, self.square_size))
+                self.graphics.append(pygame.Rect(x*self.engine.settings.block_size, y*self.engine.settings.block_size, self.engine.settings.block_size, self.engine.settings.block_size))
     
     def draw(self):
         for rect in self.graphics:
