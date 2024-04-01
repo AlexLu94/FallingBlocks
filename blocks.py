@@ -29,40 +29,43 @@ class Block():
     graphics   = []
     square_size = []
     
-    def __init__(self, engine, blocktype, startx, square_size, color=-1):   
+    def __init__(self, engine, blocktype, startx, color=-1, locations=0):   
         
         self.engine = engine
         
-        if blocktype==0:
-            # 'L' block
-            self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx+1, 2, True], [startx-1, 2, False]]
-            self.color     = 0
-        elif blocktype==1:
-            # reversed 'L' block
-            self.locations = [[startx+1, 0, True], [startx+1, 1, True], [startx+1, 2, True], [startx, 2, True], [startx-1, 2, False]]
-            self.color     = 1
-        elif blocktype==2:
-            # square block
-            self.locations = [[startx, 0, True], [startx, 1, True], [startx+1, 0, True], [startx+1, 1, True]]
-            self.color     = 2
-        elif blocktype==3:
-            # I block
-            self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx, 3, True], [startx, 4, False]]
-            self.color     = 3
-        elif blocktype==4:
-            # S block
-            self.locations = [[startx, 0, True], [startx+1, 0, True], [startx+1, 1, True], [startx+2, 1, True]]
-            self.color     = 4
-        elif blocktype==5:
-            # Z block
-            self.locations = [[startx, 0, True], [startx+1, 0, True], [startx, 1, True], [startx-1, 1, True]]
-            self.color     = 5
-        elif blocktype==6:
-            # reversed T block
-            self.locations = [[startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+1, 0, True],[startx+1, 2, False]]
-            self.color     = 6
+        if locations==0:
+            if blocktype==0:
+                # 'L' block
+                self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx+1, 2, True], [startx-1, 2, False]]
+                self.color     = 0
+            elif blocktype==1:
+                # reversed 'L' block
+                self.locations = [[startx+1, 0, True], [startx+1, 1, True], [startx+1, 2, True], [startx, 2, True], [startx-1, 2, False]]
+                self.color     = 1
+            elif blocktype==2:
+                # square block
+                self.locations = [[startx, 0, True], [startx, 1, True], [startx+1, 0, True], [startx+1, 1, True]]
+                self.color     = 2
+            elif blocktype==3:
+                # I block
+                self.locations = [[startx, 0, True], [startx, 1, True], [startx, 2, True], [startx, 3, True], [startx, 4, False]]
+                self.color     = 3
+            elif blocktype==4:
+                # S block
+                self.locations = [[startx, 0, True], [startx+1, 0, True], [startx+1, 1, True], [startx+2, 1, True]]
+                self.color     = 4
+            elif blocktype==5:
+                # Z block
+                self.locations = [[startx, 0, True], [startx+1, 0, True], [startx, 1, True], [startx-1, 1, True]]
+                self.color     = 5
+            elif blocktype==6:
+                # reversed T block
+                self.locations = [[startx, 1, True], [startx+1, 1, True], [startx+2, 1, True], [startx+1, 0, True],[startx+1, 2, False]]
+                self.color     = 6
+            else:
+                raise Exception("Unknown blocktype")
         else:
-            raise Exception("Unknown blocktype")
+            self.locations = locations
         
         self.update_graphics()
         

@@ -29,7 +29,7 @@ class Engine():
         self.screen.fill(self.settings.background)
         pygame.display.flip()
         
-        self.falling_block = blocks.Block(self, random.randrange(7), 6, self.settings.block_size)
+        self.falling_block = blocks.Block(self, random.randrange(7), 6)
         self.falling_block.update_graphics()
         self.falling_block.draw()
         self.score = 0
@@ -72,7 +72,16 @@ class Engine():
         # If falling_block hit any of the old_blocks
         if collision_block:
             self.add_falling_block_to_old_blocks()
-            self.falling_block = blocks.Block(self, random.randrange(7), 6, self.settings.block_size)
+            if random.randint(0, 100)<10:
+                self.falling_block = blocks.Block(self, random.randrange(7), 6)
+            else:
+                optimal_block_shape = self.find_optimal_block_shape()
+                if len(optimal_block_shape)>1:
+                    self.falling_block = blocks.Block(self, 0, 6, locations = optimal_block_shape, color = 8)
+                else:
+                    self.falling_block = blocks.Block(self, random.randrange(7), 6)
+                    
+            
             full_lines = self.check_full_lines()        # Check if we have full lines
             if len(full_lines)>0:                       # If yes
                 self.process_full_lines(full_lines)     # process them
@@ -139,6 +148,56 @@ class Engine():
                 if self.old_blocks[y][x]>-1:
                     self.screen.fill(self.colors.COLORS[self.old_blocks[y][x]], rect=pygame.Rect(x*self.settings.block_size, y*self.settings.block_size, self.settings.block_size, self.settings.block_size))
 
+    def find_optimal_block_shape(self):
+        # First, determine the correct row
+        for y in range(self.settings.grid_size[1]):
+            for x in range(self.settings.grid_size[0]):
+                if self.old_blocks[y][x]>-1:
+                    if (x>=1 and self.old_blocks[y][x-1]<0) or (x<len(self.old_blocks[y])-1 and self.old_blocks[y][x+1]<0):
+                        break
+            else:
+                continue
+            break
+        print("Existing block in", x, y)
+        # Randomly chose the side of an existing block
+        if x==0:
+            print("x was 0")
+            x   += 1
+            side = 1
+        elif x == self.settings.grid_size[0]:
+            print("x was max")
+            x    -= 1
+            side = -1
+        elif random.randint(0, 1)==1:
+            print("going right")
+            x   += 1
+            side = 1
+        else:
+            print("going left")
+            x    -= 1
+            side = -1
+        
+        # First fill the line
+        locations=[[0, 0, True]]
+        if side == 1:   # If going right
+            while x<self.settings.grid_size[0]-1 and self.old_blocks[y][x]<0:
+                x += 1
+                new_location = locations[-1].copy()
+                new_location[0] += 1
+                locations.append(new_location)
+        else:           # Elif going left
+            while x>0 and self.old_blocks[y][x]<0:
+                x -= 1
+                new_location = locations[-1].copy()
+                new_location[0] -= 1
+                locations.append(new_location)
+        # Need to correct for negative locations now
+        min_x = min(locations, key = lambda x: x[0])[0]
+        for i in range(len(locations)):
+            locations[i][0] -= min_x
+        print(locations)
+        return locations
+    
 class Settings():
     grid_size  = (11, 19)
     block_size = 32
@@ -147,4 +206,4 @@ class Settings():
     time_step = 200
     
 class Colors():
-    COLORS = [(0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (192, 192, 192), (255, 255, 255), (255, 0, 0)]
+    COLORS = [(0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (192, 192, 192), (255, 255, 255), (255, 0, 0), (100, 255, 255)]
