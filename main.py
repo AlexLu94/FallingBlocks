@@ -10,7 +10,7 @@ import pygame
 from engine import Engine
 
 def main():
-    MOVE_KEYS = {pygame.K_LEFT, pygame.K_RIGHT, pygame.K_DOWN, pygame.K_q, pygame.K_e}
+    MOVE_KEYS = {pygame.K_LEFT, pygame.K_RIGHT, pygame.K_DOWN, pygame.K_q, pygame.K_e, pygame.K_UP}
     engine = Engine()
      
     running = True

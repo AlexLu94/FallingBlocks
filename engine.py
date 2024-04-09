@@ -58,7 +58,7 @@ class Engine():
             if collision_status<0:
                 collision_block = (collision_status==self.falling_block.COLLISION_BLOCK)
                 self.falling_block.move(0, -1)
-        elif user_input == pygame.K_q:
+        elif (user_input == pygame.K_q) or (user_input == pygame.K_UP):
             self.falling_block.rotate(-1)
             collision_status = self.falling_block.check_collision()
             if collision_status<0:
@@ -72,17 +72,7 @@ class Engine():
         # If falling_block hit any of the old_blocks
         if collision_block:
             self.add_falling_block_to_old_blocks()
-            if random.randint(0, 20)<10:
-                self.falling_block = blocks.Block(self, random.randrange(7), 6)
-            else:
-                optimal_block_shape = self.find_optimal_block_shape()
-                print(optimal_block_shape)
-                if len(optimal_block_shape)>1:
-                    self.falling_block = blocks.Block(self, 0, 6, locations = optimal_block_shape, color = 8)
-                else:
-                    self.falling_block = blocks.Block(self, random.randrange(7), 6)
-                    
-            
+            self.falling_block = self.get_new_block()
             full_lines = self.check_full_lines()        # Check if we have full lines
             if len(full_lines)>0:                       # If yes
                 self.process_full_lines(full_lines)     # process them
@@ -149,6 +139,51 @@ class Engine():
                 if self.old_blocks[y][x]>-1:
                     self.screen.fill(self.colors.COLORS[self.old_blocks[y][x]], rect=pygame.Rect(x*self.settings.block_size, y*self.settings.block_size, self.settings.block_size, self.settings.block_size))
 
+    def get_new_block(self):
+        if random.randint(0, 100)<=self.settings.probability_good_block:
+            optimal_block_shape = self.find_optimal_block_shape()
+            optimal_block_shape = self.resize_optimal_block(optimal_block_shape)
+            if len(optimal_block_shape)>1:
+                new_block = blocks.Block(self, 0, 6, locations = optimal_block_shape, color = 8)
+            else:
+                new_block = blocks.Block(self, random.randrange(7), 6)
+        else:
+            new_block = blocks.Block(self, random.randrange(7), 6)
+        return new_block
+    
+    def resize_optimal_block(self, locations):
+        '''
+        Given an optimal block, resize it according to the game settings.
+        This is to avoid spanning of huge blocks.'''
+        print("Before resizing:", locations);
+        bottom_line = max(locations, key = lambda x: x[1])[1]
+        min_column  = min(locations, key = lambda x: x[0])[0]
+        max_column  = max(locations, key = lambda x: x[0])[0]
+        
+        # Determine the index of the highest row to accept
+        max_line_to_accept = bottom_line - max(1, round(random.gauss(self.settings.optimal_block_size_y_mean, self.settings.optimal_block_size_y_std)))
+        # Determine the range of the columns to accept
+        if random.randint(0, 1)==0:
+            min_column_to_accept = min_column
+            max_column_to_accept = max(min_column +1, max_column - max(0, round(random.gauss(self.settings.optimal_block_size_x_mean, self.settings.optimal_block_size_x_std))))
+        else:
+            min_column_to_accept = min(max_column -1, min_column + max(0, round(random.gauss(self.settings.optimal_block_size_x_mean, self.settings.optimal_block_size_x_std))))
+            max_column_to_accept = max_column
+        
+        to_delete = []
+        for i in range(len(locations)):
+            if locations[i][0]<min_column_to_accept or locations[i][0]>max_column_to_accept or locations[i][1]<max_line_to_accept:
+                to_delete.append(i)
+        for i in reversed(to_delete):
+            del locations[i]
+        print("After resizing:", locations);
+        if len(locations) == 0:
+            return locations
+        min_line = min(locations, key = lambda x: x[1])[1]
+        for i in range(len(locations)):
+            locations[i][1]-=min_line
+        return locations
+        
     def find_optimal_block_shape(self):
         # First, determine the correct row
         for y in range(self.settings.grid_size[1]):
@@ -200,10 +235,7 @@ class Engine():
                 to_add.append([x, yt, True])
                 yt += 1
         locations += to_add
-        # Now make sure that we start from line 0
-        min_line = min(locations, key = lambda x: x[1])[1]
-        for i in range(len(locations)):
-            locations[i][1]-=min_line
+
             
         
         
@@ -215,6 +247,11 @@ class Settings():
     canvas_size = (11*32, 19*32)
     background = (20, 20, 20)
     time_step = 300
+    probability_good_block = 50
+    optimal_block_size_x_mean = 3
+    optimal_block_size_x_std  = 2
+    optimal_block_size_y_mean = 3
+    optimal_block_size_y_std  = 2
     
 class Colors():
     COLORS = [(0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (192, 192, 192), (255, 255, 255), (255, 0, 0), (100, 255, 255)]
