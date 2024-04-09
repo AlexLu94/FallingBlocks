@@ -72,10 +72,11 @@ class Engine():
         # If falling_block hit any of the old_blocks
         if collision_block:
             self.add_falling_block_to_old_blocks()
-            if random.randint(0, 100)<10:
+            if random.randint(0, 20)<10:
                 self.falling_block = blocks.Block(self, random.randrange(7), 6)
             else:
                 optimal_block_shape = self.find_optimal_block_shape()
+                print(optimal_block_shape)
                 if len(optimal_block_shape)>1:
                     self.falling_block = blocks.Block(self, 0, 6, locations = optimal_block_shape, color = 8)
                 else:
@@ -152,13 +153,11 @@ class Engine():
         # First, determine the correct row
         for y in range(self.settings.grid_size[1]):
             for x in range(self.settings.grid_size[0]):
-                if self.old_blocks[y][x]>-1:
-                    if (x>=1 and self.old_blocks[y][x-1]<0) or (x<len(self.old_blocks[y])-1 and self.old_blocks[y][x+1]<0):
-                        break
+                if self.old_blocks[y][x]>-1 and ((x>=1 and self.old_blocks[y][x-1]<0) or (x<len(self.old_blocks[y])-1 and self.old_blocks[y][x+1]<0)):
+                    break
             else:
                 continue
             break
-        print("Existing block in", x, y)
         # Randomly chose the side of an existing block
         if x==0:
             print("x was 0")
@@ -176,9 +175,8 @@ class Engine():
             print("going left")
             x    -= 1
             side = -1
-        
-        # First fill the line
-        locations=[[0, 0, True]]
+        # Fill the first line
+        locations=[[x, y, True]]
         if side == 1:   # If going right
             while x<self.settings.grid_size[0]-1 and self.old_blocks[y][x]<0:
                 x += 1
@@ -191,11 +189,24 @@ class Engine():
                 new_location = locations[-1].copy()
                 new_location[0] -= 1
                 locations.append(new_location)
-        # Need to correct for negative locations now
-        min_x = min(locations, key = lambda x: x[0])[0]
-        for i in range(len(locations)):
-            locations[i][0] -= min_x
+        # Now go down each column
+        if locations == []:
+            return []
+        to_add = []
         print(locations)
+        for x,_,_ in locations:
+            yt = y+1
+            while yt<self.settings.grid_size[1] and self.old_blocks[yt][x]<0:
+                to_add.append([x, yt, True])
+                yt += 1
+        locations += to_add
+        # Now make sure that we start from line 0
+        min_line = min(locations, key = lambda x: x[1])[1]
+        for i in range(len(locations)):
+            locations[i][1]-=min_line
+            
+        
+        
         return locations
     
 class Settings():
@@ -203,7 +214,7 @@ class Settings():
     block_size = 32
     canvas_size = (11*32, 19*32)
     background = (20, 20, 20)
-    time_step = 200
+    time_step = 300
     
 class Colors():
     COLORS = [(0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (192, 192, 192), (255, 255, 255), (255, 0, 0), (100, 255, 255)]
