@@ -211,7 +211,7 @@ class Engine():
         # Fill the first line
         locations=[[x, y, True]]
         if side == 1:   # If going right
-            while x<self.settings.grid_size[0]-1 and self.old_blocks[y][x]<0:
+            while x<self.settings.grid_size[0]-2 and self.old_blocks[y][x]<0:
                 x += 1
                 new_location = locations[-1].copy()
                 new_location[0] += 1
@@ -226,11 +226,17 @@ class Engine():
         if locations == []:
             return []
         to_add = []
-        for x,_,_ in locations:
-            yt = y+1
-            while yt<self.settings.grid_size[1] and self.old_blocks[yt][x]<0:
-                to_add.append([x, yt, True])
-                yt += 1
+        try:
+            for x,_,_ in locations:
+                yt = y+1
+                while yt<self.settings.grid_size[1] and self.old_blocks[yt][x]<0:
+                    to_add.append([x, yt, True])
+                    yt += 1
+        except IndexError:
+            print("DEBUG")
+            print("Location:")
+            print(locations)
+            return []
         locations += to_add
 
             
