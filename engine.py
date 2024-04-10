@@ -29,6 +29,8 @@ class Engine():
         self.screen.fill(self.settings.background)
         pygame.display.flip()
         
+        pygame.key.set_repeat(200, 55)
+        
         self.falling_block = blocks.Block(self, random.randrange(7), 6)
         self.falling_block.update_graphics()
         self.falling_block.draw()
@@ -72,19 +74,21 @@ class Engine():
         # If falling_block hit any of the old_blocks
         if collision_block:
             self.add_falling_block_to_old_blocks()
-            self.falling_block = self.get_new_block()
             full_lines = self.check_full_lines()        # Check if we have full lines
             if len(full_lines)>0:                       # If yes
                 self.process_full_lines(full_lines)     # process them
-                self.score += 1 if len(full_lines)==1 else 2 if len(full_lines) == 2 else 4 if len(full_lines) == 3 else 8
+                self.score += 1 if len(full_lines)==1 else 3 if len(full_lines) == 2 else 9 if len(full_lines) == 3 else 27
                 print("New score:", self.score)
                 self.settings.time_step = int(self.settings.time_step*0.95)
+            self.falling_block = self.get_new_block()
             if self.falling_block.check_collision()<0:  # If, even after processing the full lines, the falling_block
                 self.game_over()                        # is still colliding, then it is game_over
                 return False                            # Return False to signal that the loop can finish
+            
         else:
             # If we have no collision, just clear the old position of the falling_block because we are going to move it
             old_position.clear()
+            
         
         # Draw the new position of falling_block
         self.falling_block.update_graphics()
@@ -117,7 +121,7 @@ class Engine():
         self.falling_block.update_graphics()
         self.falling_block.draw()
         pygame.display.flip()
-        print("GAME OVER")
+        print("GAME OVER. Score:", self.score)
         running = True
         pygame.event.clear()
         while running:
@@ -155,7 +159,6 @@ class Engine():
         '''
         Given an optimal block, resize it according to the game settings.
         This is to avoid spanning of huge blocks.'''
-        print("Before resizing:", locations);
         bottom_line = max(locations, key = lambda x: x[1])[1]
         min_column  = min(locations, key = lambda x: x[0])[0]
         max_column  = max(locations, key = lambda x: x[0])[0]
@@ -176,7 +179,6 @@ class Engine():
                 to_delete.append(i)
         for i in reversed(to_delete):
             del locations[i]
-        print("After resizing:", locations);
         if len(locations) == 0:
             return locations
         min_line = min(locations, key = lambda x: x[1])[1]
@@ -195,19 +197,15 @@ class Engine():
             break
         # Randomly chose the side of an existing block
         if x==0:
-            print("x was 0")
             x   += 1
             side = 1
         elif x == self.settings.grid_size[0]:
-            print("x was max")
             x    -= 1
             side = -1
         elif random.randint(0, 1)==1:
-            print("going right")
             x   += 1
             side = 1
         else:
-            print("going left")
             x    -= 1
             side = -1
         # Fill the first line
@@ -228,7 +226,6 @@ class Engine():
         if locations == []:
             return []
         to_add = []
-        print(locations)
         for x,_,_ in locations:
             yt = y+1
             while yt<self.settings.grid_size[1] and self.old_blocks[yt][x]<0:
@@ -254,4 +251,4 @@ class Settings():
     optimal_block_size_y_std  = 2
     
 class Colors():
-    COLORS = [(0, 255, 0), (0, 0, 255), (255, 255, 0), (0, 255, 255), (255, 0, 255), (192, 192, 192), (255, 255, 255), (255, 0, 0), (100, 255, 255)]
+    COLORS = [(0, 127,255), (0, 255, 127), (255, 127, 0), (255, 0, 127), (127, 255, 0), (127, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 0)]
