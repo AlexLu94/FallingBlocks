@@ -27,6 +27,7 @@ class Engine():
         pygame.display.set_caption("Falling Blocks")
         self.screen = pygame.display.set_mode(self.settings.canvas_size)
         self.screen.fill(self.settings.background)
+
         pygame.display.flip()
         pygame.key.set_repeat(200, 55)
         
@@ -80,6 +81,7 @@ class Engine():
                 self.process_full_lines(full_lines)
                 self.score += 1 if len(full_lines)==1 else 3 if len(full_lines) == 2 else 9 if len(full_lines) == 3 else 27
                 print("New score:", self.score)
+                pygame.display.set_caption("Falling Blocks - Score: "+str(self.score))
                 self.settings.time_step = int(self.settings.time_step*0.95)
             self.falling_block = self.get_new_block()
             if self.falling_block.check_collision()<0:  # If, even after processing the full lines, the falling_block
@@ -130,6 +132,16 @@ class Engine():
         self.falling_block.color = 9
         self.falling_block.update_graphics()
         self.falling_block.draw()
+
+        # Write GAME OVER on screen
+        font = pygame.font.Font(None, 64)
+        text = font.render("GAME OVER :(", True, (255, 200, 200))
+        textpos = text.get_rect(centerx=self.screen.get_width() / 2, y=300)
+        self.screen.blit(text, textpos)
+        text = font.render("SCORE: "+str(self.score), True, (255, 255, 255))
+        textpos = text.get_rect(centerx=self.screen.get_width() / 2, y=380)
+        self.screen.blit(text, textpos)
+
         pygame.display.flip()
 
         print("GAME OVER. Score:", self.score)
