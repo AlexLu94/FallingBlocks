@@ -14,11 +14,12 @@ The game ends when a new block cannot be placed without colliding with existing 
 
 
 ## Game Commands
-**Arrow Left**: Move the block left.
-**Arrow Right**: Move the block right.
-**Arrow Down**: Move the block down faster.
-**Arrow Up** / **Q**: Rotate the block counterclockwise.
-**E**: Rotate the block clockwise.
+
+- **Arrow Left**: Move the block left.
+- **Arrow Right**: Move the block right.
+- **Arrow Down**: Move the block down faster.
+- **Arrow Up** / **Q**: Rotate the block counterclockwise.
+- **E**: Rotate the block clockwise.
 
 ## License
 This source code is licensed under the BSD-style license found in the LICENSE file in the root directory of this source tree.
