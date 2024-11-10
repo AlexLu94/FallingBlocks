@@ -3,142 +3,136 @@ Copyright (c) 2024, Alessandro Lupo
 All rights reserved.
 
 This source code is licensed under the BSD-style license found in the
-LICENSE file in the root directory of this source tree. '''
+LICENSE file in the root directory of this source tree.
+'''
 
 import pygame, copy, random
 import blocks
  
-class Engine():
+class Engine:
     '''
-    The game engine class'''
+    The game engine class responsible for game mechanics and rendering.
+    '''
     
     def __init__(self):
         '''
-        Init the class Engine'''
+        Initialize the Engine class with game settings, colors, score,
+        and setup the initial game screen and falling block.
+        '''
 
-        # Init variables
-        self.settings   = Settings()
-        self.colors     = Colors()
-        self.score      = 0
+        # Initialize variables and settings
+        self.settings = Settings()
+        self.colors = Colors()
+        self.score = 0
         self.old_blocks = [[-1 for _ in range(self.settings.grid_size[0])] for _ in range(self.settings.grid_size[1])]
         
-        # Init pygame library and screen
+        # Initialize pygame library and game display
         pygame.init()
         pygame.display.set_caption("Falling Blocks")
         self.screen = pygame.display.set_mode(self.settings.canvas_size)
         self.screen.fill(self.settings.background)
-
         pygame.display.flip()
         pygame.key.set_repeat(200, 55)
         
-        # Position the first falling block on the screen
+        # Position the first falling block
         self.falling_block = blocks.Block(self, random.randrange(7), 6)
         self.falling_block.update_graphics()
         self.falling_block.draw()
         
     def advance(self, user_input):
         '''
-        Advance the game, by making the falling block move down, and processing the game state'''
+        Advance the game by moving the falling block based on user input,
+        checking for collisions, and updating the game state.
+        '''
 
-        # Save the old position of the block. If in the end we move the block, we know where to clean
+        # Save current block position for clearing if block moves
         old_position = copy.copy(self.falling_block)
         
-        # Perform movement, either because of user input or because of falling
-        collision_block = False     # Flag: is the block colliding with one of the old_blocks?
+        # Process movement and check for collisions
+        collision_block = False  # Flag to indicate if block collides with existing blocks
         if user_input == pygame.K_LEFT:
             self.falling_block.move(-1, 0)
-            collision_status = self.falling_block.check_collision()
-            if collision_status<0:
-                self.falling_block.move(1, 0)
+            if self.falling_block.check_collision() < 0:
+                self.falling_block.move(1, 0)  # Undo move on collision
         elif user_input == pygame.K_RIGHT:
             self.falling_block.move(1, 0)
-            collision_status = self.falling_block.check_collision()
-            if collision_status<0:
-                self.falling_block.move(-1, 0)
+            if self.falling_block.check_collision() < 0:
+                self.falling_block.move(-1, 0)  # Undo move on collision
         elif user_input == pygame.K_DOWN or user_input == -1:
             self.falling_block.move(0, 1)
             collision_status = self.falling_block.check_collision()
-            if collision_status<0:
-                collision_block = (collision_status==self.falling_block.COLLISION_BLOCK)
-                self.falling_block.move(0, -1)
-        elif (user_input == pygame.K_q) or (user_input == pygame.K_UP):
+            if collision_status < 0:
+                collision_block = (collision_status == self.falling_block.COLLISION_BLOCK)
+                self.falling_block.move(0, -1)  # Undo move on collision
+        elif user_input == pygame.K_q or user_input == pygame.K_UP:
             self.falling_block.rotate(-1)
-            collision_status = self.falling_block.check_collision()
-            if collision_status<0:
-                self.falling_block.rotate(1)
+            if self.falling_block.check_collision() < 0:
+                self.falling_block.rotate(1)  # Undo rotation on collision
         elif user_input == pygame.K_e:
             self.falling_block.rotate(1)
-            collision_status = self.falling_block.check_collision()
-            if collision_status<0:
-                self.falling_block.rotate(-1)
+            if self.falling_block.check_collision() < 0:
+                self.falling_block.rotate(-1)  # Undo rotation on collision
         
-        # If falling_block hit any of the old_blocks
+        # Handle collision with old blocks
         if collision_block:
             self.add_falling_block_to_old_blocks()
-            full_lines = self.check_full_lines()        # Check if we have full lines on screen
-            if len(full_lines)>0:
-                # If yes, process them                       
+            full_lines = self.check_full_lines()
+            if full_lines:
+                # Process full lines and update score
                 self.process_full_lines(full_lines)
-                self.score += 1 if len(full_lines)==1 else 3 if len(full_lines) == 2 else 9 if len(full_lines) == 3 else 27
+                self.score += 1 if len(full_lines) == 1 else 3 if len(full_lines) == 2 else 9 if len(full_lines) == 3 else 27
                 print("New score:", self.score)
-                pygame.display.set_caption("Falling Blocks - Score: "+str(self.score))
-                self.settings.time_step = int(self.settings.time_step*0.95)
+                pygame.display.set_caption(f"Falling Blocks - Score: {self.score}")
+                self.settings.time_step = int(self.settings.time_step * 0.95)
             self.falling_block = self.get_new_block()
-            if self.falling_block.check_collision()<0:  # If, even after processing the full lines, the falling_block
-                self.game_over()                        # is still colliding, then it is game_over
-                return False                            # Return False to signal that the loop can finish
+            if self.falling_block.check_collision() < 0:
+                self.game_over()
+                return False  # Signal to end game loop
         else:
-            # If we have no collision, just clear the old position of the falling_block because we are going to move it
-            old_position.clear()
+            old_position.clear()  # Clear old position if no collision
         
-        # Draw the new position of falling_block
+        # Draw updated block position and refresh display
         self.falling_block.update_graphics()
         self.falling_block.draw()
-        
-        # Advance the display
         pygame.display.flip()
         
-        # Return True to signal that the loop can continue
-        return True
+        return True  # Signal to continue game loop
     
     def add_falling_block_to_old_blocks(self):
         '''
-        Add the falling_block to the collection of fixed blocks on the ground (old_blocks).
-        This happens when falling_block touches an old_block.'''
-
+        Add the falling block to the old_blocks grid, making it a fixed part
+        of the game field.
+        '''
         for x, y, is_visible in self.falling_block.locations:
-            if is_visible == 0:
-                continue
-            self.old_blocks[y][x]=self.falling_block.color
+            if is_visible:
+                self.old_blocks[y][x] = self.falling_block.color
     
     def check_full_lines(self):
         '''
-        Check if we have full lines on screen.'''
-
+        Identify full lines in the old_blocks grid.
+        '''
         retv = []
-        for i in range(len(self.old_blocks)):
-            for v in self.old_blocks[i]:
-                if v == -1:
-                    break
-            else:
+        for i, row in enumerate(self.old_blocks):
+            if all(v != -1 for v in row):
                 retv.append(i)
         return retv
     
     def game_over(self):
         '''
-        Game over'''
+        End the game, display "Game Over" message, and wait for window closure.
+        '''
 
-        # Set the last block in red
+        # Highlight last block in red
         self.falling_block.color = 9
         self.falling_block.update_graphics()
         self.falling_block.draw()
 
-        # Write GAME OVER on screen
+        # Display "GAME OVER" message
         font = pygame.font.Font(None, 64)
         text = font.render("GAME OVER :(", True, (255, 200, 200))
         textpos = text.get_rect(centerx=self.screen.get_width() / 2, y=300)
         self.screen.blit(text, textpos)
-        text = font.render("SCORE: "+str(self.score), True, (255, 255, 255))
+        text = font.render(f"SCORE: {self.score}", True, (255, 255, 255))
         textpos = text.get_rect(centerx=self.screen.get_width() / 2, y=380)
         self.screen.blit(text, textpos)
 
@@ -146,6 +140,7 @@ class Engine():
 
         print("GAME OVER. Score:", self.score)
         print("Close the window to exit")
+        
         running = True
         pygame.event.clear()
         while running:
@@ -154,132 +149,98 @@ class Engine():
                     running = False
                     
     def process_full_lines(self, full_lines):
-        # Change the old_blocks
-        for line in list(full_lines):
-            for i in reversed(range(0, line)):
-                temp = self.old_blocks[i].copy()
-                self.old_blocks[i+1] = temp
-            self.old_blocks[0] = [-1 for _ in range(self.settings.grid_size[0])]
-        # Update graphics
+        '''
+        Remove full lines from old_blocks, shift remaining blocks down,
+        and update the display.
+        '''
+        for line in full_lines:
+            for i in range(line, 0, -1):
+                self.old_blocks[i] = self.old_blocks[i - 1].copy()
+            self.old_blocks[0] = [-1] * self.settings.grid_size[0]
+        
+        # Update graphics after removing lines
         self.screen.fill(self.settings.background)
-        for y in range(len(self.old_blocks)):
-            for x in range(len(self.old_blocks[y])):
-                if self.old_blocks[y][x]>-1:
-                    self.screen.fill(self.colors.COLORS[self.old_blocks[y][x]], rect=pygame.Rect(x*self.settings.block_size, y*self.settings.block_size, self.settings.block_size, self.settings.block_size))
+        for y, row in enumerate(self.old_blocks):
+            for x, color_index in enumerate(row):
+                if color_index > -1:
+                    rect = pygame.Rect(x * self.settings.block_size, y * self.settings.block_size, self.settings.block_size, self.settings.block_size)
+                    self.screen.fill(self.colors.COLORS[color_index], rect=rect)
 
     def get_new_block(self):
-        if random.randint(0, 100)<=self.settings.probability_good_block:
+        '''
+        Generate a new block.
+        '''
+        # Note: `probability_good_block` is currently set to zero, so the following condition is always skipped.
+        if random.randint(0, 100) <= self.settings.probability_good_block:
             optimal_block_shape = self.find_optimal_block_shape()
             optimal_block_shape = self.resize_optimal_block(optimal_block_shape)
-            if len(optimal_block_shape)>1:
-                new_block = blocks.Block(self, 0, 6, locations = optimal_block_shape, color = 8)
-            else:
-                new_block = blocks.Block(self, random.randrange(7), 6)
-        else:
-            new_block = blocks.Block(self, random.randrange(7), 6)
-        return new_block
+            if optimal_block_shape:
+                return blocks.Block(self, 0, 6, locations=optimal_block_shape, color=8)
+        return blocks.Block(self, random.randrange(7), 6)
     
     def resize_optimal_block(self, locations):
         '''
-        Given an optimal block, resize it according to the game settings.
-        This is to avoid spanning of huge blocks.'''
-
-        bottom_line = max(locations, key = lambda x: x[1])[1]
-        min_column  = min(locations, key = lambda x: x[0])[0]
-        max_column  = max(locations, key = lambda x: x[0])[0]
+        Resize an optimal block shape to fit within the game grid,
+        avoiding oversized blocks.
+        [Currently not used]
+        '''
+        # Determine vertical and horizontal limits
+        bottom_line = max(locations, key=lambda x: x[1])[1]
+        min_column, max_column = min(locations, key=lambda x: x[0])[0], max(locations, key=lambda x: x[0])[0]
         
-        # Determine the index of the highest row to accept
         max_line_to_accept = bottom_line - max(1, round(random.gauss(self.settings.optimal_block_size_y_mean, self.settings.optimal_block_size_y_std)))
+        min_column_to_accept = min_column if random.choice([True, False]) else max(min_column, max_column - round(random.gauss(self.settings.optimal_block_size_x_mean, self.settings.optimal_block_size_x_std)))
 
-        # Determine the range of the columns to accept
-        if random.randint(0, 1)==0:
-            min_column_to_accept = min_column
-            max_column_to_accept = max(min_column +1, max_column - max(0, round(random.gauss(self.settings.optimal_block_size_x_mean, self.settings.optimal_block_size_x_std))))
-        else:
-            min_column_to_accept = min(max_column -1, min_column + max(0, round(random.gauss(self.settings.optimal_block_size_x_mean, self.settings.optimal_block_size_x_std))))
-            max_column_to_accept = max_column
+        # Remove any parts of block exceeding limits
+        locations = [loc for loc in locations if min_column_to_accept <= loc[0] <= max_column]
         
-        # Delete the parts exceeding the max size
-        to_delete = []
-        for i in range(len(locations)):
-            if locations[i][0]<min_column_to_accept or locations[i][0]>max_column_to_accept or locations[i][1]<max_line_to_accept:
-                to_delete.append(i)
-        for i in reversed(to_delete):
-            del locations[i]
-        if len(locations) == 0:
-            return locations
-        min_line = min(locations, key = lambda x: x[1])[1]
-        for i in range(len(locations)):
-            locations[i][1]-=min_line
+        if locations:
+            min_line = min(locations, key=lambda x: x[1])[1]
+            for loc in locations:
+                loc[1] -= min_line
 
         return locations
-        
+    
     def find_optimal_block_shape(self):
         '''
-        Given the current configuration, produce an optimal block perfectly filling a notch in the old_blocks.'''
-
-        # First, determine the starting row
-        for y in range(self.settings.grid_size[1]):
-            for x in range(self.settings.grid_size[0]):
-                if self.old_blocks[y][x]>-1 and ((x>=1 and self.old_blocks[y][x-1]<0) or (x<len(self.old_blocks[y])-1 and self.old_blocks[y][x+1]<0)):
+        Create an optimal block that fills a gap within the old_blocks grid.
+        [Currently not used]
+        '''
+        # Find first empty spot
+        for y, row in enumerate(self.old_blocks):
+            for x, cell in enumerate(row):
+                if cell > -1 and (self.old_blocks[y][x - 1] < 0 or (x + 1 < len(row) and self.old_blocks[y][x + 1] < 0)):
                     break
             else:
                 continue
             break
 
-        # Randomly chose the side of an existing block
-        if x==0:
-            x   += 1
-            side = 1
-        elif x == self.settings.grid_size[0]:
-            x    -= 1
-            side = -1
-        elif random.randint(0, 1)==1:
-            x   += 1
-            side = 1
-        else:
-            x    -= 1
-            side = -1
+        # Randomly choose side to fill
+        side = random.choice([-1, 1])
+        x += side
+        locations = [[x, y, True]]
+        
+        while 0 <= x < len(row) - 1 and self.old_blocks[y][x] < 0:
+            x += side
+            new_loc = [locations[-1][0] + side, y, True]
+            locations.append(new_loc)
 
-        # Fill the first line
-        locations=[[x, y, True]]
-        if side == 1:   # If going right
-            while x<self.settings.grid_size[0]-2 and self.old_blocks[y][x]<0:
-                x += 1
-                new_location = locations[-1].copy()
-                new_location[0] += 1
-                locations.append(new_location)
-        else:           # Elif going left
-            while x>0 and self.old_blocks[y][x]<0:
-                x -= 1
-                new_location = locations[-1].copy()
-                new_location[0] -= 1
-                locations.append(new_location)
-
-        # Now go down each column
-        if locations == []:
-            return []
-        to_add = []
-        for x,_,_ in locations:
-            yt = y+1
-            while yt<self.settings.grid_size[1] and self.old_blocks[yt][x]<0:
-                to_add.append([x, yt, True])
-                yt += 1
-        locations += to_add
-   
-        return locations
+        # Add any empty cells below
+        to_add = [[x, yt, True] for x, _, _ in locations for yt in range(y + 1, len(self.old_blocks)) if self.old_blocks[yt][x] < 0]
+        
+        return locations + to_add
     
-class Settings():
-    grid_size  = (11, 19)
+class Settings:
+    grid_size = (11, 19)
     block_size = 32
-    canvas_size = (11*32, 19*32)
+    canvas_size = (11 * 32, 19 * 32)
     background = (20, 20, 20)
     time_step = 300
-    probability_good_block = 50
+    probability_good_block = 0
     optimal_block_size_x_mean = 3
-    optimal_block_size_x_std  = 2
+    optimal_block_size_x_std = 2
     optimal_block_size_y_mean = 3
-    optimal_block_size_y_std  = 2
+    optimal_block_size_y_std = 2
     
-class Colors():
-    COLORS = [(0, 127,255), (0, 255, 127), (255, 127, 0), (255, 0, 127), (127, 255, 0), (127, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 0), (255, 0, 0)]
+class Colors:
+    COLORS = [(0, 127, 255), (0, 255, 127), (255, 127, 0), (255, 0, 127), (127, 255, 0), (127, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 0), (255, 0, 0)]
