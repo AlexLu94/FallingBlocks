@@ -1,6 +1,6 @@
 # Falling Blocks
 
-![visitors](https://visitor-badge.laobi.icu/badge?AlexLu94=FallingBlocks)
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=AlexLu94.FallingBlocks)
 
 ## About
 This project is a simple game where the player combines falling blocks to create contiguous rows. As rows are completed, they disappear, and the player’s score increases.
