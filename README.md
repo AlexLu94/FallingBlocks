@@ -9,10 +9,10 @@ The game ends when a new block cannot be placed without colliding with existing 
 ![If the gif doesn't play, please find the original file in the folder of the project](demo.gif)
 
 ## Built With
-**Python**: Core language for game logic and functionality.
-**Pygame**: Library for handling game graphics, user input, and display management.
-**Math**: Used for calculating rotations and handling block positioning.
-**Random**: To introduce variation in block shapes and colors for added game complexity.
+- **Python**: Core language for game logic and functionality.
+- **Pygame**: Library for handling game graphics, user input, and display management.
+- **Math**: Used for calculating rotations and handling block positioning.
+- **Random**: To introduce variation in block shapes and colors for added game complexity.
 
 
 ## Game Commands
